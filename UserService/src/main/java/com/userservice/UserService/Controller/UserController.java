@@ -17,6 +17,11 @@ public class UserController {
         return service.register(user);
     }
 
+    @GetMapping("/getUser/{email}")
+    public UserServerEntity getUserByEmail(@PathVariable String email) {
+        return service.getUserByEmail(email);
+    }
+
     @PostMapping("/login")
     public String login(@RequestBody UserServerEntity user) {
         return service.login(user);
@@ -35,5 +40,10 @@ public class UserController {
     @DeleteMapping("/delete-user/{email}")
     public String deleteUser(@PathVariable String email) {
         return service.deleteUser(email);
+    }
+
+    @GetMapping("/getUser/{id}")
+    public UserServerEntity getUserById(@PathVariable int id) {
+        return service.getUserById(id);
     }
 }
