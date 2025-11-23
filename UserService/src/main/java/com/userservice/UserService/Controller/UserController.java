@@ -17,7 +17,7 @@ public class UserController {
         return service.register(user);
     }
 
-    @GetMapping("/getUser/{email}")
+    @GetMapping("/getUser/email/{email}")
     public UserServerEntity getUserByEmail(@PathVariable String email) {
         return service.getUserByEmail(email);
     }
@@ -42,7 +42,7 @@ public class UserController {
         return service.deleteUser(email);
     }
 
-    @GetMapping("/getUser/{id}")
+    @GetMapping("/getUser/id/{id}")
     public UserServerEntity getUserById(@PathVariable int id) {
         return service.getUserById(id);
     }

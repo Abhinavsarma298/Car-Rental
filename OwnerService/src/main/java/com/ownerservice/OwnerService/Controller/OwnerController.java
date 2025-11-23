@@ -17,7 +17,7 @@ public class OwnerController {
         return service.register(owner);
     }
 
-    @GetMapping("/getOwner/{email}")
+    @GetMapping("/getOwner/email/{email}")
     public OwnerServerEntity getUserByEmail(@PathVariable String email) {
         return service.getOwnerByEmail(email);
     }
@@ -42,7 +42,7 @@ public class OwnerController {
         return service.deleteOwner(email);
     }
 
-    @GetMapping("/getOwner/{id}")
+    @GetMapping("/getOwner/id/{id}")
     public OwnerServerEntity getOwnerById(@PathVariable int id) {
         return service.getOwnerById(id);
     }
