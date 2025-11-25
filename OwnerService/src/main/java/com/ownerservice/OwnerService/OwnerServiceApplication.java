@@ -9,5 +9,5 @@ public class OwnerServiceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(OwnerServiceApplication.class, args);
 	}
-
+    // updated
 }
