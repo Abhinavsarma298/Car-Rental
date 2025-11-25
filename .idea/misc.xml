@@ -6,14 +6,15 @@
       <list>
         <option value="$PROJECT_DIR$/UserService/pom.xml" />
         <option value="$PROJECT_DIR$/ServiceRegistry/pom.xml" />
-        <option value="$PROJECT_DIR$/../../OwnerService/OwnerService/pom.xml" />
+        <option value="$USER_HOME$/OwnerService/OwnerService/pom.xml" />
         <option value="$USER_HOME$/OneDrive - Cognizant/Documents/JusDrive/Car-Rental/OwnerService/pom.xml" />
         <option value="$PROJECT_DIR$/OwnerService/pom.xml" />
+        <option value="$PROJECT_DIR$/CarService/pom.xml" />
       </list>
     </option>
     <option name="ignoredFiles">
       <set>
-        <option value="$PROJECT_DIR$/../../OwnerService/OwnerService/pom.xml" />
+        <option value="$USER_HOME$/OwnerService/OwnerService/pom.xml" />
       </set>
     </option>
   </component>
