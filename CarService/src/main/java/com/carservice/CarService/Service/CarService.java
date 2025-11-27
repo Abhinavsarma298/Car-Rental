@@ -33,6 +33,7 @@ public class CarService {
     // ✔ Get all cars by owner id
     public List<CarServiceEntity> getCarsByOwnerId(Integer ownerId) {
         List<CarServiceEntity> cars = repo.findByOwnerId(ownerId);
+
         if (cars.isEmpty()) {
             throw new CarNotFoundException(
                     "No cars found for Owner ID - " + ownerId
@@ -57,5 +58,21 @@ public class CarService {
         return repo.findById(id)
                 .orElseThrow(() ->
                         new CarNotFoundException("Car not found with ID - " + id));
+    }
+
+    public String removeCarById(Integer id) {
+
+        Optional<CarServiceEntity> exists = repo.findById(id);
+
+        if(exists.isEmpty()){
+            throw new CarNotFoundException("Car not found with ID - " + id);
+        }
+
+        CarServiceEntity car = exists.get();
+        repo.delete(car);
+
+        return "Car Removed Successfully";
+
+
     }
 }

@@ -37,4 +37,12 @@ public class CarController {
     public CarServiceEntity getCarById(@PathVariable Integer id) {
         return service.getCarById(id);
     }
+
+    @DeleteMapping("/delete/{id}")
+    public String removeCarById(@PathVariable Integer id) {
+
+        return service.removeCarById(id);
+
+    }
+
 }

@@ -58,7 +58,7 @@ public class CarServiceEntity {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable;
 
-    @Column(name = "rating", precision = 3, scale = 2)
+    @Column(name = "rating", precision = 3, scale = 2, columnDefinition = "DECIMAL(3,2) DEFAULT 0")
     private BigDecimal rating;
 
     @Lob
