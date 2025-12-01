@@ -1,9 +1,12 @@
 package com.carservice.CarService.Service;
 
 import com.carservice.CarService.CarRepo.CarRepo;
+import com.carservice.CarService.DTO.OwnerServerEntity;
 import com.carservice.CarService.Entity.CarServiceEntity;
 import com.carservice.CarService.Exception.CarAlreadyExistsException;
 import com.carservice.CarService.Exception.CarNotFoundException;
+import com.carservice.CarService.FeignClient.OwnerServiceClient;
+import com.ownerservice.OwnerService.Exception.OwnerNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +19,19 @@ public class CarService {
     @Autowired
     private CarRepo repo;
 
+    @Autowired
+    private OwnerServiceClient ownerServiceClient;
+
     // ✔ Register new car
     public CarServiceEntity register(CarServiceEntity car) {
+
+        //validate owner existence
+        try{
+            OwnerServerEntity owner = ownerServiceClient.getOwnerById(car.getOwnerId());
+        } catch(Exception e){
+            throw new OwnerNotFoundException("Owner Not found with ID - " + car.getOwnerId());
+        }
+
         Optional<CarServiceEntity> existingCar =
                 repo.findByRegistrationNumber(car.getRegistrationNumber());
 
@@ -32,6 +46,15 @@ public class CarService {
 
     // ✔ Get all cars by owner id
     public List<CarServiceEntity> getCarsByOwnerId(Integer ownerId) {
+
+        //check owner existence via owner-service
+        try{
+            OwnerServerEntity owner = ownerServiceClient.getOwnerById(ownerId);
+
+        }catch (Exception e){
+            throw new OwnerNotFoundException("Owner Not found with ID - " + ownerId);
+        }
+
         List<CarServiceEntity> cars = repo.findByOwnerId(ownerId);
 
         if (cars.isEmpty()) {
@@ -59,6 +82,7 @@ public class CarService {
                 .orElseThrow(() ->
                         new CarNotFoundException("Car not found with ID - " + id));
     }
+
 
     public String removeCarById(Integer id) {
 

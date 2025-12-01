@@ -46,26 +46,25 @@ public class CarServiceEntity {
     @Column(name = "transmission", nullable = false, length = 50)
     private String transmission;
 
-    @Column(name = "mileage", nullable = false, precision = 10, scale = 2)
-    private BigDecimal mileage;
+    @Column(name = "mileage", nullable = false)
+    private double mileage;
 
     @Column(name = "seating_capacity", nullable = false)
     private Integer seatingCapacity;
 
-    @Column(name = "price_per_hour", nullable = false, precision = 10, scale = 2)
-    private BigDecimal pricePerHour;
+    @Column(name = "price_per_hour", nullable = false)
+    private double pricePerHour;
 
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable;
 
-    @Column(name = "rating", precision = 3, scale = 2, columnDefinition = "DECIMAL(3,2) DEFAULT 0")
-    private BigDecimal rating;
+    @Column(name = "rating", columnDefinition = "DEFAULT 0")
+    private double rating;
 
     @Lob
-    @Column(name = "image")
+    @Column(name = "image", columnDefinition = "MEDIUMBLOB") // Store the image as a medium blob
     private byte[] image;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
