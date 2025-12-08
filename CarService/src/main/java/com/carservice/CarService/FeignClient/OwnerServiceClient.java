@@ -5,7 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@FeignClient(name = "OWNER-SERVICE")
+@FeignClient(name = "OWNERSERVICE")
 public interface OwnerServiceClient {
 
     @GetMapping("/owners/getOwner/id/{id}")

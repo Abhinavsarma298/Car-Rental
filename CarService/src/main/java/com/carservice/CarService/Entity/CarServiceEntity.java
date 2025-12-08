@@ -58,8 +58,8 @@ public class CarServiceEntity {
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable;
 
-    @Column(name = "rating", columnDefinition = "DEFAULT 0")
-    private double rating;
+    @Column(name = "rating", nullable = false)
+    private double rating = 0.0;
 
     @Lob
     @Column(name = "image", columnDefinition = "MEDIUMBLOB") // Store the image as a medium blob
