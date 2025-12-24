@@ -1,29 +1,48 @@
 package com.carservice.CarService.DTO;
 
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.*;
+
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.checkerframework.checker.index.qual.Positive;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class CarRegisterDto {
+
+    @NotNull()
     private Integer ownerId;
+
+    @NotBlank(message = "Vehicle name is required")
     private String vehicleName;
+
+    @NotBlank(message = "Model is required")
     private String model;
+
+    @NotNull()
+    @Min(value = 1990, message = "Year must be valid")
     private Integer yearOfPurchase;
+
+    @NotBlank(message = "Registration number is required")
     private String registrationNumber;
+
+    @NotBlank(message = "Vehicle type is required")
     private String vehicleType;
+
+    @NotBlank(message = "Fuel type is required")
     private String fuelType;
+
+    @NotBlank(message = "Transmission is required")
     private String transmission;
-    private Double mileage;
+
+    @Positive()
+    private double mileage;
+
+    @NotNull()
+    @Min(value = 1, message = "Seating capacity must be at least 1")
     private Integer seatingCapacity;
-    private Double pricePerHour;
-    private Boolean isAvailable;
-    private Double rating;
 
-    // no-args constructor, getters, setters (use Lombok if you prefer)
+    @Positive()
+    private double pricePerHour;
 }
-

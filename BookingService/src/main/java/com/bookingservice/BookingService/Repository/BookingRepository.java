@@ -1,6 +1,7 @@
 package com.bookingservice.BookingService.Repository;
 
 import com.bookingservice.BookingService.Entity.Booking;
+import com.bookingservice.BookingService.Entity.BookingStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,7 +9,15 @@ import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
+
     List<Booking> findByUserId(Long userId);
+
     List<Booking> findByVehicleId(Long vehicleId);
 
+    List<Booking> findByStatusIn(List<BookingStatus> statuses);
+
+    List<Booking> findByVehicleIdAndStatusIn(
+            Long vehicleId,
+            List<BookingStatus> statuses
+    );
 }

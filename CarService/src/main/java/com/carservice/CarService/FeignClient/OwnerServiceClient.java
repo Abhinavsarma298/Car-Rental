@@ -10,8 +10,4 @@ public interface OwnerServiceClient {
 
     @GetMapping("/owners/getOwner/id/{id}")
     public OwnerServerEntity getOwnerById(@PathVariable int id);
-
-
-
-
 }

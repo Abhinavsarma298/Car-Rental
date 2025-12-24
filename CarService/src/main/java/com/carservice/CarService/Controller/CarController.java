@@ -1,8 +1,9 @@
 package com.carservice.CarService.Controller;
 
 import com.carservice.CarService.DTO.CarRegisterDto;
-import com.carservice.CarService.Entity.CarServiceEntity;
+import com.carservice.CarService.DTO.CarResponseDto;
 import com.carservice.CarService.Service.CarService;
+import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -11,56 +12,89 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/cars")
+@RequestMapping("/api/cars")
 public class CarController {
 
     @Autowired
     private CarService service;
 
-
-
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<CarServiceEntity> register(
-            @RequestPart("carData") CarRegisterDto carDto,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile
+    /**
+     * ADMIN: Register a new car
+     */
+    @PostMapping(
+            value = "/register",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<CarResponseDto> registerCar(
+            @Valid @RequestPart("carData") CarRegisterDto carDto,
+            @RequestPart(value = "image", required = false) MultipartFile image
     ) throws IOException {
 
-        // map DTO -> Entity
-        CarServiceEntity car = new CarServiceEntity();
-        BeanUtils.copyProperties(carDto, car);
-
-        // set image bytes if present (storing full image in DB as LOB)
-        if (imageFile != null && !imageFile.isEmpty()) {
-            car.setImage(imageFile.getBytes());
-        }
-
-        CarServiceEntity saved = service.register(car);
-        return ResponseEntity.status(201).body(saved);
+        CarResponseDto response = service.registerCar(carDto, image);
+        return ResponseEntity.status(201).body(response);
     }
 
+    /**
+     * USER: Get car by ID
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<CarResponseDto> getCarById(@PathVariable Integer id) {
+        return ResponseEntity.ok(service.getCarById(id));
+    }
 
-
-    // Get ALL cars by brand (vehicleName)
+    /**
+     * USER: Get all cars by brand
+     */
     @GetMapping("/brand/{brand}")
-    public List<CarServiceEntity> getCarsByBrand(@PathVariable String brand) {
-        return service.getCarsByBrand(brand);
+    public ResponseEntity<List<CarResponseDto>> getCarsByBrand(
+            @PathVariable String brand
+    ) {
+        return ResponseEntity.ok(service.getCarsByBrand(brand));
     }
 
-    // Get car by id
-    @GetMapping("/id/{id}")
-    public CarServiceEntity getCarById(@PathVariable Integer id) {
-        return service.getCarById(id);
+    /**
+     * USER: Get all available cars
+     */
+    @GetMapping("/available")
+    public ResponseEntity<List<CarResponseDto>> getAvailableCars() {
+        return ResponseEntity.ok(service.getAvailableCars());
     }
 
-    @DeleteMapping("/delete/{id}")
-    public String removeCarById(@PathVariable Integer id) {
-
-        return service.removeCarById(id);
-
+    /**
+     * ADMIN: Soft delete car
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCar(@PathVariable Integer id) {
+        service.deleteCar(id);
+        return ResponseEntity.ok("Car deleted successfully");
     }
 
+    /**
+     * BOOKING SERVICE: Lock car
+     */
+    @PutMapping("/{id}/book")
+    public ResponseEntity<String> markCarAsBooked(@PathVariable Integer id) {
+        service.markCarAsBooked(id);
+        return ResponseEntity.ok("Car marked as BOOKED");
+    }
+
+    /**
+     * BOOKING SERVICE: Release car
+     */
+    @PutMapping("/{id}/release")
+    public ResponseEntity<String> markCarAsAvailable(@PathVariable Integer id) {
+        service.markCarAsAvailable(id);
+        return ResponseEntity.ok("Car marked as AVAILABLE");
+    }
+
+    /**
+     * USER: Get car image
+     */
+    @GetMapping("/{id}/image")
+    public ResponseEntity<byte[]> getCarImage(@PathVariable Integer id) {
+        return service.getCarImage(id);
+    }
 }
