@@ -25,17 +25,14 @@ public class BookingService {
 
         validateBooking(booking);
 
-        // 🔐 LOCK CAR (vehicleId EXISTS)
         carServiceClient.markCarAsBooked(booking.getVehicleId());
 
         try {
             checkVehicleAvailability(booking);
-
             booking.setStatus(BookingStatus.CREATED);
             return repository.save(booking);
 
         } catch (RuntimeException ex) {
-            // ❗ rollback car lock if booking fails
             carServiceClient.markCarAsAvailable(booking.getVehicleId());
             throw ex;
         }
@@ -53,10 +50,7 @@ public class BookingService {
     public Booking getBookingById(Long id) {
         return repository.findById(id)
                 .orElseThrow(() ->
-                        new BookingNotFoundException(
-                                "Booking not found with ID - " + id
-                        )
-                );
+                        new BookingNotFoundException("Booking not found with ID - " + id));
     }
 
     // ================= UPDATE =================
@@ -73,37 +67,31 @@ public class BookingService {
         return repository.save(booking);
     }
 
-    // ================= DELETE =================
+    // ================= DELETE (HARD DELETE) =================
     public String deleteBooking(Long id) {
 
         Booking booking = getBookingById(id);
 
-        if (booking.getStatus() == BookingStatus.COMPLETED) {
+        if (booking.getStatus() == BookingStatus.ONGOING) {
             throw new InvalidBookingStatusException(
-                    "Completed bookings cannot be cancelled"
-            );
+                    "Ongoing booking cannot be deleted");
         }
 
-        booking.setStatus(BookingStatus.CANCELLED);
-        repository.save(booking);
+        repository.deleteById(id);
 
-        // 🔓 RELEASE CAR
         carServiceClient.markCarAsAvailable(booking.getVehicleId());
 
-        return "Booking cancelled successfully";
+        return "Booking deleted successfully";
     }
 
     // ================= STATUS ACTIONS =================
-
     public Booking confirmBooking(Long id) {
 
         Booking booking = getBookingById(id);
 
-        if (booking.getStatus() != BookingStatus.CREATED) {
+        if (booking.getStatus() != BookingStatus.CREATED)
             throw new InvalidBookingStatusException(
-                    "Only CREATED bookings can be confirmed"
-            );
-        }
+                    "Only CREATED bookings can be confirmed");
 
         booking.setStatus(BookingStatus.CONFIRMED);
         return repository.save(booking);
@@ -113,11 +101,9 @@ public class BookingService {
 
         Booking booking = getBookingById(id);
 
-        if (booking.getStatus() != BookingStatus.CONFIRMED) {
+        if (booking.getStatus() != BookingStatus.CONFIRMED)
             throw new InvalidBookingStatusException(
-                    "Only CONFIRMED bookings can be started"
-            );
-        }
+                    "Only CONFIRMED bookings can be started");
 
         booking.setStatus(BookingStatus.ONGOING);
         return repository.save(booking);
@@ -127,16 +113,13 @@ public class BookingService {
 
         Booking booking = getBookingById(id);
 
-        if (booking.getStatus() != BookingStatus.ONGOING) {
+        if (booking.getStatus() != BookingStatus.ONGOING)
             throw new InvalidBookingStatusException(
-                    "Only ONGOING bookings can be completed"
-            );
-        }
+                    "Only ONGOING bookings can be completed");
 
         booking.setStatus(BookingStatus.COMPLETED);
         repository.save(booking);
 
-        // 🔓 RELEASE CAR AFTER COMPLETION
         carServiceClient.markCarAsAvailable(booking.getVehicleId());
 
         return booking;
@@ -146,19 +129,56 @@ public class BookingService {
 
         Booking booking = getBookingById(id);
 
-        if (booking.getStatus() == BookingStatus.COMPLETED) {
+        if (booking.getStatus() == BookingStatus.COMPLETED)
             throw new InvalidBookingStatusException(
-                    "Completed bookings cannot be cancelled"
-            );
-        }
+                    "Completed bookings cannot be cancelled");
 
         booking.setStatus(BookingStatus.CANCELLED);
         repository.save(booking);
 
-        // 🔓 RELEASE CAR
         carServiceClient.markCarAsAvailable(booking.getVehicleId());
 
         return booking;
+    }
+
+    // ================= ADMIN STATUS UPDATE =================
+    public Booking updateBookingStatus(Long id, String status) {
+
+        Booking booking = getBookingById(id);
+
+        try {
+            BookingStatus newStatus = BookingStatus.valueOf(status.toUpperCase());
+            booking.setStatus(newStatus);
+            return repository.save(booking);
+
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidBookingStatusException("Invalid booking status: " + status);
+        }
+    }
+
+    // ================= FILTER APIS =================
+    public List<Booking> getBookingsByUser(Long userId) {
+        List<Booking> bookings = repository.findByUserId(userId);
+        if (bookings.isEmpty())
+            throw new BookingNotFoundException("No bookings for user " + userId);
+        return bookings;
+    }
+
+    public List<Booking> getBookingsByVehicle(Long vehicleId) {
+        List<Booking> bookings = repository.findByVehicleId(vehicleId);
+        if (bookings.isEmpty())
+            throw new BookingNotFoundException("No bookings for vehicle " + vehicleId);
+        return bookings;
+    }
+
+    public List<Booking> getActiveBookings() {
+        List<Booking> bookings = repository.findByStatusIn(
+                List.of(BookingStatus.CONFIRMED, BookingStatus.ONGOING));
+
+        if (bookings.isEmpty())
+            throw new BookingNotFoundException("No active bookings");
+
+        return bookings;
     }
 
     // ================= VALIDATIONS =================
@@ -179,20 +199,8 @@ public class BookingService {
         LocalDateTime dropoff =
                 LocalDateTime.of(booking.getDropoffDate(), booking.getDropoffTime());
 
-        if (pickup.isBefore(LocalDateTime.now()))
-            throw new InvalidBookingException("Pickup time cannot be in the past");
-
-        if (pickup.isBefore(LocalDateTime.now().plusMinutes(30)))
-            throw new InvalidBookingException("Pickup must be at least 30 minutes from now");
-
         if (!dropoff.isAfter(pickup))
             throw new InvalidBookingException("Dropoff must be after pickup");
-
-        if (pickup.plusHours(1).isAfter(dropoff))
-            throw new InvalidBookingException("Minimum booking duration is 1 hour");
-
-        if (pickup.plusDays(30).isBefore(dropoff))
-            throw new InvalidBookingException("Maximum booking duration is 30 days");
 
         LocalTime start = LocalTime.of(8, 0);
         LocalTime end = LocalTime.of(22, 0);
@@ -200,10 +208,6 @@ public class BookingService {
         if (booking.getPickupTime().isBefore(start) ||
                 booking.getPickupTime().isAfter(end))
             throw new InvalidBookingException("Pickup time must be between 08:00–22:00");
-
-        if (booking.getDropoffTime().isBefore(start) ||
-                booking.getDropoffTime().isAfter(end))
-            throw new InvalidBookingException("Dropoff time must be between 08:00–22:00");
     }
 
     // ================= AVAILABILITY =================
@@ -217,11 +221,7 @@ public class BookingService {
         List<Booking> activeBookings =
                 repository.findByVehicleIdAndStatusIn(
                         booking.getVehicleId(),
-                        List.of(
-                                BookingStatus.CONFIRMED,
-                                BookingStatus.ONGOING
-                        )
-                );
+                        List.of(BookingStatus.CONFIRMED, BookingStatus.ONGOING));
 
         for (Booking existing : activeBookings) {
 
@@ -232,30 +232,13 @@ public class BookingService {
 
             if (pickup.isBefore(existingDropoff) &&
                     dropoff.isAfter(existingPickup)) {
-
                 throw new VehicleAlreadyBookedException(
-                        "Vehicle already booked for this time slot"
-                );
+                        "Vehicle already booked for this time slot");
             }
         }
     }
 
-    private void checkVehicleAvailabilityForUpdate(
-            Long bookingId, Booking booking) {
-
-        List<Booking> activeBookings =
-                repository.findByVehicleIdAndStatusIn(
-                        booking.getVehicleId(),
-                        List.of(
-                                BookingStatus.CONFIRMED,
-                                BookingStatus.ONGOING
-                        )
-                );
-
-        for (Booking existing : activeBookings) {
-            if (!existing.getId().equals(bookingId)) {
-                checkVehicleAvailability(booking);
-            }
-        }
+    private void checkVehicleAvailabilityForUpdate(Long bookingId, Booking booking) {
+        checkVehicleAvailability(booking);
     }
 }

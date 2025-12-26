@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="ServiceRegistry" />
+        <module name="BookingService" />
       </profile>
       <profile name="Annotation profile for UserService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -19,7 +20,7 @@
         </processorPath>
         <module name="UserService" />
       </profile>
-      <profile name="Annotation profile for OwnerService" enabled="true">
+      <profile name="Annotation profile for PaymentService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,15 +29,18 @@
         </processorPath>
         <module name="CarService" />
         <module name="OwnerService" />
-        <module name="BookingService" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="PaymentService" target="17" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="BookingService" options="-parameters" />
       <module name="CarService" options="-parameters" />
       <module name="OwnerService" options="-parameters" />
+      <module name="PaymentService" options="-parameters" />
       <module name="ServiceRegistry" options="-parameters" />
       <module name="UserService" options="-parameters" />
     </option>

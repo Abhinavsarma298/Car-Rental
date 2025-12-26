@@ -3,8 +3,8 @@ package com.carservice.CarService.Controller;
 import com.carservice.CarService.DTO.CarRegisterDto;
 import com.carservice.CarService.DTO.CarResponseDto;
 import com.carservice.CarService.Service.CarService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,20 +21,27 @@ public class CarController {
     @Autowired
     private CarService service;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     /**
-     * ADMIN: Register a new car
+     * ADMIN: Register a new car (METHOD 2 – JSON as String)
      */
     @PostMapping(
             value = "/register",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<CarResponseDto> registerCar(
-            @Valid @RequestPart("carData") CarRegisterDto carDto,
+            @RequestPart("carData") String carData,
             @RequestPart(value = "image", required = false) MultipartFile image
     ) throws IOException {
 
-        CarResponseDto response = service.registerCar(carDto, image);
-        return ResponseEntity.status(201).body(response);
+        // Convert JSON string to DTO
+        CarRegisterDto carDto =
+                objectMapper.readValue(carData, CarRegisterDto.class);
+
+        return ResponseEntity
+                .status(201)
+                .body(service.registerCar(carDto, image));
     }
 
     /**

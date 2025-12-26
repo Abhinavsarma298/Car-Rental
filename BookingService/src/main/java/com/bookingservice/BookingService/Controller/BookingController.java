@@ -1,6 +1,7 @@
 package com.bookingservice.BookingService.Controller;
 
 import com.bookingservice.BookingService.Entity.Booking;
+import com.bookingservice.BookingService.Service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

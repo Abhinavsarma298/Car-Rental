@@ -6,10 +6,11 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
+	<!-- ✅ Spring Boot -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.2.5</version>
+		<version>3.2.4</version>
 		<relativePath/>
 	</parent>
 
@@ -23,7 +24,7 @@
 		<spring-cloud.version>2023.0.1</spring-cloud.version>
 	</properties>
 
-	<!-- ✅ DEPENDENCY MANAGEMENT (VERY IMPORTANT) -->
+	<!-- ✅ Spring Cloud BOM -->
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -38,7 +39,7 @@
 
 	<dependencies>
 
-		<!-- 🌐 REST API -->
+		<!-- 🌐 REST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -57,16 +58,16 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- 🔁 EUREKA CLIENT -->
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-		</dependency>
-
 		<!-- 🔗 OPENFEIGN -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+
+		<!-- ⚖️ LOAD BALANCER (REQUIRED for Feign) -->
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-loadbalancer</artifactId>
 		</dependency>
 
 		<!-- 🧠 LOMBOK -->
@@ -75,6 +76,12 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+		</dependency>
+
 
 		<!-- 🧪 TEST -->
 		<dependency>
