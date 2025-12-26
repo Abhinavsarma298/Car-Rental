@@ -6,12 +6,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vehicles")
+@Table(
+        name = "vehicles",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = "registration_number")
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,9 +27,11 @@ public class CarServiceEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    /* ================= OWNER ================= */
     @Column(name = "owner_id", nullable = false)
     private Integer ownerId;
 
+    /* ================= VEHICLE DETAILS ================= */
     @Column(name = "vehicle_name", nullable = false, length = 100)
     private String vehicleName;
 
@@ -55,16 +62,29 @@ public class CarServiceEntity {
     @Column(name = "price_per_hour", nullable = false)
     private double pricePerHour;
 
-    @Column(name = "is_available", nullable = false)
-    private Boolean isAvailable;
+    /* ================= STATUS (REAL WORLD) ================= */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CarStatus status;
 
+    /* ================= SOFT DELETE ================= */
+    @Column(nullable = false)
+    private Boolean deleted = false;
+
+    /* ================= RATING ================= */
     @Column(name = "rating", nullable = false)
     private double rating = 0.0;
 
+    /* ================= IMAGE ================= */
     @Lob
-    @Column(name = "image", columnDefinition = "MEDIUMBLOB") // Store the image as a medium blob
+    @Column(name = "image", columnDefinition = "MEDIUMBLOB")
     private byte[] image;
 
+    /* ================= AUDIT ================= */
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

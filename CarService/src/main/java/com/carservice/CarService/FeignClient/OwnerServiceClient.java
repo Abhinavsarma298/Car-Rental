@@ -8,10 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "OWNERSERVICE")
 public interface OwnerServiceClient {
 
-    @GetMapping("/owners/getOwner/id/{id}")
-    public OwnerServerEntity getOwnerById(@PathVariable int id);
-
-
-
-
+    @GetMapping("/api/owners/{id}")
+    OwnerServerEntity getOwnerById(@PathVariable int id);
 }
+

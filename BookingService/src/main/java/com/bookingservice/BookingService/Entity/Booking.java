@@ -8,7 +8,9 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "bookings")
@@ -28,17 +30,24 @@ public class Booking {
     @Column(name = "vehicle_id", nullable = false)
     private Long vehicleId;
 
-    @Column(name = "pickup_datetime", nullable = false)
-    private LocalDateTime pickupDatetime;
+    @Column(name = "pickup_date", nullable = false)
+    private LocalDate pickupDate;
 
-    @Column(name = "dropoff_datetime", nullable = false)
-    private LocalDateTime dropoffDatetime;
+    @Column(name = "pickup_time", nullable = false)
+    private LocalTime pickupTime;
+
+    @Column(name = "dropoff_date", nullable = false)
+    private LocalDate dropoffDate;
+
+    @Column(name = "dropoff_time", nullable = false)
+    private LocalTime dropoffTime;
 
     @Column(name = "total_distance")
     private BigDecimal totalDistance;
 
-    @Column(name = "status", nullable = false, length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BookingStatus status;
 
     @Column(name = "total_amount")
     private BigDecimal totalAmount;

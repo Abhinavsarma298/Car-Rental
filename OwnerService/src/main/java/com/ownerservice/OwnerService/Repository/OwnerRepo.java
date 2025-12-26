@@ -8,9 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface OwnerRepo extends JpaRepository<OwnerServerEntity, Integer> {
-
-//    boolean existsByName(String name);
-//    boolean existsByEmail(String email);
-
     Optional<OwnerServerEntity> findByEmail(String email);
 }

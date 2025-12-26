@@ -8,9 +8,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-
 @Entity
-@Table(name = "owners")
+@Table(
+        name = "owners",
+        uniqueConstraints = @UniqueConstraint(columnNames = "email")
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,22 +23,22 @@ public class OwnerServerEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(name = "email", nullable = false, length = 150, unique = true)
+    @Column(nullable = false, length = 150)
     private String email;
 
-    @Column(name = "password", nullable = false, length = 100)
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(nullable = false, length = 20)
     private String phone;
 
-    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String address;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 }

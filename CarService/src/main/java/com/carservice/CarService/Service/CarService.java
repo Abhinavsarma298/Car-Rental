@@ -1,18 +1,27 @@
 package com.carservice.CarService.Service;
 
 import com.carservice.CarService.CarRepo.CarRepo;
+import com.carservice.CarService.DTO.CarRegisterDto;
+import com.carservice.CarService.DTO.CarResponseDto;
 import com.carservice.CarService.DTO.OwnerServerEntity;
 import com.carservice.CarService.Entity.CarServiceEntity;
+import com.carservice.CarService.Entity.CarStatus;
 import com.carservice.CarService.Exception.CarAlreadyExistsException;
 import com.carservice.CarService.Exception.CarNotFoundException;
+import com.carservice.CarService.Exception.InvalidCarStateException;
 import com.carservice.CarService.FeignClient.OwnerServiceClient;
 import com.ownerservice.OwnerService.Exception.OwnerNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.BeanUtils;
 
+
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-
 @Service
 public class CarService {
 
@@ -22,81 +31,166 @@ public class CarService {
     @Autowired
     private OwnerServiceClient ownerServiceClient;
 
-    // ✔ Register new car
-    public CarServiceEntity register(CarServiceEntity car) {
+    /* ===================== REGISTER CAR ===================== */
+    public CarResponseDto registerCar(
+            CarRegisterDto dto,
+            MultipartFile image
+    ) throws IOException {
 
-        //validate owner existence
-        try{
-            OwnerServerEntity owner = ownerServiceClient.getOwnerById(car.getOwnerId());
-        } catch(Exception e){
-            throw new OwnerNotFoundException("Owner Not found with ID - " + car.getOwnerId());
-        }
-
-        Optional<CarServiceEntity> existingCar =
-                repo.findByRegistrationNumber(car.getRegistrationNumber());
-
-        if (existingCar.isPresent()) {
-            throw new CarAlreadyExistsException(
-                    "Car already exists with Registration Number - " + car.getRegistrationNumber()
+        // Validate owner existence
+        try {
+            ownerServiceClient.getOwnerById(dto.getOwnerId());
+        } catch (Exception e) {
+            throw new OwnerNotFoundException(
+                    "Owner not found with ID - " + dto.getOwnerId()
             );
         }
 
-        return repo.save(car);
-    }
+        // Check duplicate registration number
+        repo.findByRegistrationNumber(dto.getRegistrationNumber())
+                .ifPresent(car -> {
+                    throw new CarAlreadyExistsException(
+                            "Car already exists with Registration Number - "
+                                    + dto.getRegistrationNumber()
+                    );
+                });
 
-    // ✔ Get all cars by owner id
-    public List<CarServiceEntity> getCarsByOwnerId(Integer ownerId) {
+        // Map DTO → Entity
+        CarServiceEntity car = new CarServiceEntity();
+        BeanUtils.copyProperties(dto, car);
 
-        //check owner existence via owner-service
-        try{
-            OwnerServerEntity owner = ownerServiceClient.getOwnerById(ownerId);
+        car.setStatus(CarStatus.AVAILABLE);
+        car.setDeleted(false);
 
-        }catch (Exception e){
-            throw new OwnerNotFoundException("Owner Not found with ID - " + ownerId);
+        if (image != null && !image.isEmpty()) {
+            car.setImage(image.getBytes());
         }
 
-        List<CarServiceEntity> cars = repo.findByOwnerId(ownerId);
+        CarServiceEntity savedCar = repo.save(car);
 
-        if (cars.isEmpty()) {
-            throw new CarNotFoundException(
-                    "No cars found for Owner ID - " + ownerId
-            );
-        }
-        return cars;
+        // Map Entity → Response DTO
+        CarResponseDto response = new CarResponseDto();
+        BeanUtils.copyProperties(savedCar, response);
+
+        return response;
     }
 
-    // ✔ Get all cars by brand (vehicleName)
-    public List<CarServiceEntity> getCarsByBrand(String brand) {
-        List<CarServiceEntity> cars = repo.findByVehicleNameIgnoreCase(brand);
-        if (cars.isEmpty()) {
-            throw new CarNotFoundException(
-                    "No cars found with Brand/Vehicle Name - " + brand
-            );
-        }
-        return cars;
-    }
+    /* ===================== GET CAR BY ID ===================== */
+    public CarResponseDto getCarById(Integer id) {
 
-    // ✔ Get single car by id
-    public CarServiceEntity getCarById(Integer id) {
-        return repo.findById(id)
+        CarServiceEntity car = repo.findByIdAndDeletedFalse(id)
                 .orElseThrow(() ->
-                        new CarNotFoundException("Car not found with ID - " + id));
+                        new CarNotFoundException(
+                                "Car not found with ID - " + id
+                        )
+                );
+
+        CarResponseDto response = new CarResponseDto();
+        BeanUtils.copyProperties(car, response);
+        return response;
     }
 
+    /* ===================== GET CARS BY BRAND ===================== */
+    public List<CarResponseDto> getCarsByBrand(String brand) {
 
-    public String removeCarById(Integer id) {
+        List<CarServiceEntity> cars =
+                repo.findByVehicleNameIgnoreCaseAndDeletedFalse(brand);
 
-        Optional<CarServiceEntity> exists = repo.findById(id);
-
-        if(exists.isEmpty()){
-            throw new CarNotFoundException("Car not found with ID - " + id);
+        if (cars.isEmpty()) {
+            throw new CarNotFoundException(
+                    "No cars found with Brand - " + brand
+            );
         }
 
-        CarServiceEntity car = exists.get();
-        repo.delete(car);
+        return cars.stream().map(car -> {
+            CarResponseDto dto = new CarResponseDto();
+            BeanUtils.copyProperties(car, dto);
+            return dto;
+        }).toList();
+    }
 
-        return "Car Removed Successfully";
+    /* ===================== GET AVAILABLE CARS ===================== */
+    public List<CarResponseDto> getAvailableCars() {
 
+        List<CarServiceEntity> cars =
+                repo.findByStatusAndDeletedFalse(CarStatus.AVAILABLE);
 
+        if (cars.isEmpty()) {
+            throw new CarNotFoundException("No available cars found");
+        }
+
+        return cars.stream().map(car -> {
+            CarResponseDto dto = new CarResponseDto();
+            BeanUtils.copyProperties(car, dto);
+            return dto;
+        }).toList();
+    }
+
+    /* ===================== SOFT DELETE ===================== */
+    public void deleteCar(Integer id) {
+
+        CarServiceEntity car = repo.findByIdAndDeletedFalse(id)
+                .orElseThrow(() ->
+                        new CarNotFoundException(
+                                "Car not found with ID - " + id
+                        )
+                );
+
+        car.setDeleted(true);
+        car.setStatus(CarStatus.INACTIVE);
+        repo.save(car);
+    }
+
+    /* ===================== BOOKING: LOCK CAR ===================== */
+    public void markCarAsBooked(Integer carId) {
+
+        CarServiceEntity car = repo.findByIdAndDeletedFalse(carId)
+                .orElseThrow(() ->
+                        new CarNotFoundException(
+                                "Car not found with ID - " + carId
+                        )
+                );
+
+        if (car.getStatus() != CarStatus.AVAILABLE) {
+            throw new InvalidCarStateException(
+                    "Car is not available for booking"
+            );
+        }
+
+        car.setStatus(CarStatus.BOOKED);
+        repo.save(car);
+    }
+
+    /* ===================== BOOKING: RELEASE CAR ===================== */
+    public void markCarAsAvailable(Integer carId) {
+
+        CarServiceEntity car = repo.findByIdAndDeletedFalse(carId)
+                .orElseThrow(() ->
+                        new CarNotFoundException(
+                                "Car not found with ID - " + carId
+                        )
+                );
+
+        car.setStatus(CarStatus.AVAILABLE);
+        repo.save(car);
+    }
+
+    /* ===================== GET CAR IMAGE ===================== */
+    public ResponseEntity<byte[]> getCarImage(Integer id) {
+
+        CarServiceEntity car = repo.findByIdAndDeletedFalse(id)
+                .orElseThrow(() ->
+                        new CarNotFoundException(
+                                "Car not found with ID - " + id
+                        )
+                );
+
+        if (car.getImage() == null) {
+            throw new CarNotFoundException("Car image not found");
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(car.getImage());
     }
 }
