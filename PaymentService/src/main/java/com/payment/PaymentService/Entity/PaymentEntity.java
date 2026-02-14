@@ -35,7 +35,7 @@ public class PaymentEntity {
     private BigDecimal amount;
 
     @Column(length = 10, nullable = false)
-    private String currency; // INR, USD
+    private String currency;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false)

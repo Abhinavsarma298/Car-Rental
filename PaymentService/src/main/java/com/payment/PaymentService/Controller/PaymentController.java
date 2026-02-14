@@ -181,6 +181,7 @@ public class PaymentController {
                 paymentService.getAllPayments()
         );
     }
+
     @GetMapping("/invoice/pdf/{paymentId}")
     public ResponseEntity<byte[]> downloadInvoicePdf(
             @PathVariable UUID paymentId
