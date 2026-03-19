@@ -10,7 +10,11 @@ public class NotificationEventDTO {
     private String name;
     private NotificationType type;
 
-    // Optional data
     private String carName;
     private String bookingId;
+
+    private String pickupDate;
+    private String returnDate;
+    private String location;
+    private String price;
 }
